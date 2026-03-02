@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MH Academy — CollegeConnect BD</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+<!-- ══ FIREBASE SDK ══ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, query, orderBy, limit, onSnapshot, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ══════════════════════════════════════════════
+//  🔥 আপনার Firebase Config এখানে বসান
+//  Firebase Console → Project Settings → Web App
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ══════════════════════════════════════════════
+//  QUIZ DATA
+// ══════════════════════════════════════════════
+const quizData = {
+  econ: [
+    { q:'চাহিদা বিধি অনুযায়ী দাম বাড়লে চাহিদার কী হয়?', opts:['বাড়ে','কমে','অপরিবর্তিত থাকে','দ্বিগুণ হয়'], ans:1, exp:'চাহিদা বিধি অনুসারে দাম ও চাহিদার মধ্যে বিপরীত সম্পর্ক বিদ্যমান।' },
+    { q:'GDP-র পূর্ণরূপ কী?', opts:['General Domestic Product','Gross Domestic Product','Gross Development Plan','General Development Policy'], ans:1, exp:'GDP = Gross Domestic Product — কোনো দেশের ভূখণ্ডে এক বছরে উৎপাদিত পণ্য ও সেবার মোট মূল্য।' },
+    { q:'মুক্তবাজার অর্থনীতিতে দাম নির্ধারণ হয় কীভাবে?', opts:['সরকার','চাহিদা ও যোগান','উৎপাদনকারী','ভোক্তা'], ans:1, exp:'মুক্তবাজারে দাম চাহিদা ও যোগানের মিথস্ক্রিয়া দ্বারা নির্ধারিত হয়।' },
+    { q:'স্থিতিস্থাপক চাহিদার ক্ষেত্রে Ed = ?', opts:['১ এর কম','১ এর সমান','১ এর বেশি','শূন্য'], ans:2, exp:'স্থিতিস্থাপক চাহিদায় Ed > 1।' },
+    { q:'বাংলাদেশে কেন্দ্রীয় ব্যাংক কোনটি?', opts:['সোনালী ব্যাংক','অগ্রণী ব্যাংক','বাংলাদেশ ব্যাংক','ব্র্যাক ব্যাংক'], ans:2, exp:'বাংলাদেশ ব্যাংক হলো দেশের কেন্দ্রীয় ব্যাংক।' },
+  ],
+  eng: [
+    { q:'Which sentence is correct?', opts:['He go to school','He goes to school','He going to school','He gone to school'], ans:1, exp:'3rd person singular-এ verb-এ s/es যোগ হয়।' },
+    { q:'The synonym of "happy" is:', opts:['Sad','Joyful','Angry','Tired'], ans:1, exp:'"Joyful" মানে আনন্দিত।' },
+    { q:'Passive of "He writes a letter":', opts:['A letter is written by him','A letter was written by him','A letter has been written','A letter will be written'], ans:0, exp:'Present Simple Active → is/am/are + V3 + by + Object।' },
+    { q:'Which is a conjunction?', opts:['Quickly','Beautiful','Because','Run'], ans:2, exp:'"Because" একটি conjunction।' },
+    { q:'Antonym of "ancient":', opts:['Old','Modern','Historic','Antique'], ans:1, exp:'"Modern" — ancient-এর বিপরীত।' },
+  ],
+  math: [
+    { q:'sin²θ + cos²θ = ?', opts:['0','2','1','θ'], ans:2, exp:'এটি একটি মৌলিক ত্রিকোণমিতিক পরিচয়।' },
+    { q:'√144 = ?', opts:['11','12','13','14'], ans:1, exp:'12 × 12 = 144।' },
+    { q:'log₁₀(100) = ?', opts:['1','2','10','100'], ans:1, exp:'10² = 100, তাই log₁₀(100) = 2।' },
+    { q:'একটি ত্রিভুজের তিন কোণের সমষ্টি কত?', opts:['90°','180°','270°','360°'], ans:1, exp:'যেকোনো ত্রিভুজের কোণের সমষ্টি = 180°।' },
+    { q:'2x + 5 = 15 হলে x = ?', opts:['3','4','5','6'], ans:2, exp:'2x = 10, x = 5।' },
+  ],
+  ict: [
+    { q:'HTML-এর পূর্ণরূপ কী?', opts:['Hyper Text Markup Language','High Tech Modern Language','Hyper Transfer Markup Language','Hyper Tech Markup Link'], ans:0, exp:'HTML = HyperText Markup Language।' },
+    { q:'CPU-র পূর্ণরূপ কী?', opts:['Central Processing Unit','Computer Processing Unit','Central Program Unit','Control Processing Unit'], ans:0, exp:'CPU = Central Processing Unit।' },
+    { q:'Internet-এর জনক কে?', opts:['Bill Gates','Tim Berners-Lee','Vint Cerf','Steve Jobs'], ans:2, exp:'Vint Cerf — "Father of the Internet"।' },
+    { q:'Binary তে 10 = দশমিকে কত?', opts:['1','2','3','4'], ans:1, exp:'Binary 10 = 1×2¹ + 0×2⁰ = 2।' },
+    { q:'www এর পূর্ণরূপ কী?', opts:['World Wide Web','World Wide Wire','Wide Web World','Web Wide World'], ans:0, exp:'www = World Wide Web।' },
+  ],
+};
+
+// ══════════════════════════════════════════════
+//  AUTH STATE
+// ══════════════════════════════════════════════
+let currentUser = null;
+let currentUserData = null;
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    currentUserData = snap.exists() ? snap.data() : {};
+    showApp();
+    loadDashboard();
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    showAuth();
+  }
+});
+
+// ══════════════════════════════════════════════
+//  AUTH FUNCTIONS
+// ══════════════════════════════════════════════
+window.doRegister = async () => {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const role = document.getElementById('reg-role').value;
+  const college = document.getElementById('reg-college').value.trim();
+  if (!name || !email || !pass || !college) return showToast('সব তথ্য পূরণ করুন!', 'error');
+  setAuthLoading(true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      name, email, role, college,
+      createdAt: serverTimestamp(),
+      quizScore: 0, quizCount: 0, notesUploaded: 0
+    });
+    showToast('স্বাগতম ' + name + '! 🎉');
+  } catch (e) {
+    showToast(authError(e.code), 'error');
+  }
+  setAuthLoading(false);
+};
+
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) return showToast('ইমেইল ও পাসওয়ার্ড দিন!', 'error');
+  setAuthLoading(true);
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    showToast('লগইন সফল! স্বাগতম 🎉');
+  } catch (e) {
+    showToast(authError(e.code), 'error');
+  }
+  setAuthLoading(false);
+};
+
+window.doLogout = async () => {
+  await signOut(auth);
+  showToast('লগআউট সম্পন্ন হয়েছে।');
+};
+
+function authError(code) {
+  const map = {
+    'auth/email-already-in-use': 'এই ইমেইল আগে থেকেই নিবন্ধিত।',
+    'auth/invalid-email': 'ইমেইল ঠিকানা সঠিক নয়।',
+    'auth/weak-password': 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।',
+    'auth/user-not-found': 'এই ইমেইলে কোনো অ্যাকাউন্ট নেই।',
+    'auth/wrong-password': 'পাসওয়ার্ড ভুল হয়েছে।',
+    'auth/invalid-credential': 'ইমেইল বা পাসওয়ার্ড ভুল।',
+    'auth/too-many-requests': 'অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।',
+  };
+  return map[code] || 'একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+}
+
+function setAuthLoading(on) {
+  document.querySelectorAll('.auth-btn').forEach(b => {
+    b.disabled = on;
+    b.textContent = on ? 'অপেক্ষা করুন...' : b.dataset.label;
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SHOW/HIDE AUTH vs APP
+// ══════════════════════════════════════════════
+function showAuth() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  const n = currentUser?.displayName || '';
+  document.getElementById('sidebar-username').textContent = n;
+  document.getElementById('sidebar-role').textContent = currentUserData?.role === 'teacher' ? '👨‍🏫 শিক্ষক' : '👨‍🎓 শিক্ষার্থী';
+  document.getElementById('sidebar-avatar').textContent = n.charAt(0) || '?';
+  document.getElementById('profile-name-display').textContent = n;
+  document.getElementById('profile-college-display').textContent = currentUserData?.college || '';
+  document.getElementById('profile-role-display').textContent = currentUserData?.role === 'teacher' ? 'শিক্ষক অ্যাকাউন্ট ✓' : 'শিক্ষার্থী অ্যাকাউন্ট';
+  document.getElementById('profile-avatar-lg').textContent = n.charAt(0) || '?';
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    // User count
+    const usersSnap = await getDocs(collection(db, 'users'));
+    document.getElementById('stat-users').textContent = usersSnap.size;
+
+    // Notes count
+    const notesSnap = await getDocs(collection(db, 'notes'));
+    document.getElementById('stat-notes').textContent = notesSnap.size;
+
+    // Quiz count from leaderboard total
+    const lbSnap = await getDocs(collection(db, 'users'));
+    let totalQuizzes = 0;
+    lbSnap.forEach(d => { totalQuizzes += (d.data().quizCount || 0); });
+    document.getElementById('stat-quizzes').textContent = totalQuizzes;
+
+    // Load top 3 for dashboard
+    loadDashLeaderboard();
+
+    // Load notices
+    loadNotices();
+  } catch(e) { console.log('Dashboard load:', e.message); }
+}
+
+async function loadDashLeaderboard() {
+  try {
+    const q = query(collection(db, 'users'), orderBy('quizScore', 'desc'), limit(3));
+    const snap = await getDocs(q);
+    const medals = ['🥇','🥈','🥉'];
+    const colors = ['#c8861a','#1a5fa8','#2d7a4f','#6a30a8','#c0392b'];
+    let html = '';
+    snap.forEach((d, i) => {
+      const u = d.data();
+      const letter = (u.name || '?').charAt(0);
+      const color = colors[i % colors.length];
+      html += `<div class="lb-item ${i===0?'top1':i===1?'top2':i===2?'top3':''}">
+        <div class="lb-rank">${medals[i]||i+1}</div>
+        <div class="lb-avatar" style="background:${color}">${letter}</div>
+        <div class="lb-info"><div class="lb-name">${u.name||'অজানা'}</div><div class="lb-college">${u.college||''}</div></div>
+        <div class="lb-score">${u.quizScore||0}</div>
+      </div>`;
+    });
+    document.getElementById('dash-lb').innerHTML = html || '<p style="color:var(--muted);font-size:14px;padding:12px 0">এখনো কোনো কুইজ দেওয়া হয়নি</p>';
+  } catch(e) { console.log(e); }
+}
+
+// ══════════════════════════════════════════════
+//  NOTICES (Real-time)
+// ══════════════════════════════════════════════
+function loadNotices() {
+  const q = query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(5));
+  onSnapshot(q, snap => {
+    const dotColors = ['var(--red)','var(--primary)','var(--green)','var(--blue)'];
+    let html = '';
+    snap.forEach((d, i) => {
+      const n = d.data();
+      const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('bn-BD') : 'সম্প্রতি';
+      html += `<div class="notice-item">
+        <div class="notice-dot" style="background:${dotColors[i%4]}"></div>
+        <div>
+          <div class="notice-text">${n.text}</div>
+          <div class="notice-meta">📅 ${date} • ${n.author||'প্রশাসন'}</div>
+        </div>
+      </div>`;
+    });
+    document.getElementById('notices-container').innerHTML = html || '<p style="color:var(--muted);font-size:14px;padding:12px 0">কোনো নোটিশ নেই।</p>';
+  });
+}
+
+window.postNotice = async () => {
+  const text = document.getElementById('notice-input').value.trim();
+  if (!text) return showToast('নোটিশের বিষয় লিখুন!', 'error');
+  try {
+    await addDoc(collection(db, 'notices'), {
+      text, author: currentUser.displayName,
+      createdAt: serverTimestamp()
+    });
+    document.getElementById('notice-input').value = '';
+    showToast('নোটিশ পোস্ট হয়েছে! ✅');
+  } catch(e) { showToast('সমস্যা হয়েছে।', 'error'); }
+};
+
+// ══════════════════════════════════════════════
+//  NOTES — Firestore
+// ══════════════════════════════════════════════
+let notesFilter = 'all';
+
+window.filterNotes = (f, el) => {
+  notesFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  loadNotes();
+};
+
+async function loadNotes() {
+  document.getElementById('notes-grid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:32px">লোড হচ্ছে...</p>';
+  try {
+    let q = query(collection(db, 'notes'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    const tagMap = { econ:'tag-econ', eng:'tag-eng', sci:'tag-sci', math:'tag-math', ict:'tag-ict' };
+    const subjectLabel = { econ:'অর্থনীতি', eng:'ইংরেজি', sci:'বিজ্ঞান', math:'গণিত', ict:'ICT' };
+    let html = '';
+    snap.forEach(d => {
+      const n = { id: d.id, ...d.data() };
+      if (notesFilter !== 'all' && n.subject !== notesFilter) return;
+      const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('bn-BD') : '';
+      html += `<div class="note-card">
+        <span class="note-subject ${tagMap[n.subject]||'tag-econ'}">${subjectLabel[n.subject]||n.subject}</span>
+        <div class="note-title">${n.title}</div>
+        <div class="note-desc">${n.desc}</div>
+        <div class="note-footer">
+          <div class="note-author">👤 ${n.authorName||'অজানা'}</div>
+          <button class="note-download-btn" onclick="downloadNote('${n.id}','${n.url||''}')">⬇ ডাউনলোড</button>
+        </div>
+        <div class="note-stats" style="margin-top:10px">⬇ ${n.downloads||0} &nbsp; ❤️ ${n.likes||0} &nbsp; 📅 ${date}</div>
+      </div>`;
+    });
+    document.getElementById('notes-grid').innerHTML = html || '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:32px">এখনো কোনো নোট নেই।</p>';
+  } catch(e) { document.getElementById('notes-grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;padding:32px">লোড করতে সমস্যা হয়েছে।</p>'; }
+}
+
+window.downloadNote = async (id, url) => {
+  try {
+    await updateDoc(doc(db, 'notes', id), { downloads: increment(1) });
+    if (url) window.open(url, '_blank');
+    else showToast('ডাউনলোড লিঙ্ক শীঘ্রই যোগ হবে।');
+  } catch(e) {}
+};
+
+window.uploadNote = async () => {
+  const title = document.getElementById('note-title').value.trim();
+  const desc = document.getElementById('note-desc').value.trim();
+  const subject = document.getElementById('note-subject').value;
+  const url = document.getElementById('note-url').value.trim();
+  if (!title || !desc) return showToast('শিরোনাম ও বিবরণ দিন!', 'error');
+  try {
+    await addDoc(collection(db, 'notes'), {
+      title, desc, subject, url,
+      authorName: currentUser.displayName,
+      authorId: currentUser.uid,
+      downloads: 0, likes: 0,
+      createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'users', currentUser.uid), { notesUploaded: increment(1) });
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-desc').value = '';
+    document.getElementById('note-url').value = '';
+    document.getElementById('upload-modal').style.display = 'none';
+    showToast('নোট আপলোড হয়েছে! ✅');
+    loadNotes();
+  } catch(e) { showToast('আপলোড করতে সমস্যা হয়েছে।', 'error'); }
+};
+
+// ══════════════════════════════════════════════
+//  QUIZ — Save to Firestore
+// ══════════════════════════════════════════════
+let quizSubject = 'econ';
+let quizIdx = 0;
+let quizScore = 0;
+let quizAnswered = false;
+
+window.selectSubject = (sub, el) => {
+  quizSubject = sub;
+  document.querySelectorAll('.qsubject-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+};
+
+window.startQuiz = () => {
+  quizIdx = 0; quizScore = 0; quizAnswered = false;
+  document.getElementById('quiz-start').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'none';
+  document.getElementById('quiz-active').style.display = 'block';
+  loadQuestion();
+};
+
+function loadQuestion() {
+  const questions = quizData[quizSubject];
+  const q = questions[quizIdx % questions.length];
+  const total = questions.length;
+  document.getElementById('q-fill').style.width = `${((quizIdx+1)/total)*100}%`;
+  document.getElementById('q-counter').textContent = `প্রশ্ন ${quizIdx+1} / ${total}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-explanation').style.display = 'none';
+  document.getElementById('q-next-btn').style.display = 'none';
+  quizAnswered = false;
+  const labels = ['ক','খ','গ','ঘ'];
+  document.getElementById('q-options').innerHTML = q.opts.map((opt, i) =>
+    `<button class="q-option" onclick="answerQ(${i})">${labels[i]}. ${opt}</button>`
+  ).join('');
+}
+
+window.answerQ = (idx) => {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const q = quizData[quizSubject][quizIdx % quizData[quizSubject].length];
+  document.querySelectorAll('.q-option').forEach((o, i) => {
+    o.disabled = true;
+    if (i === q.ans) o.classList.add('correct');
+    else if (i === idx) o.classList.add('wrong');
+  });
+  if (idx === q.ans) quizScore++;
+  document.getElementById('q-explanation').textContent = '💡 ' + q.exp;
+  document.getElementById('q-explanation').style.display = 'block';
+  const btn = document.getElementById('q-next-btn');
+  const total = quizData[quizSubject].length;
+  btn.style.display = 'inline-block';
+  if (quizIdx + 1 >= total) { btn.textContent = 'ফলাফল দেখুন 🎉'; btn.onclick = showQuizResult; }
+  else { btn.textContent = 'পরবর্তী প্রশ্ন →'; btn.onclick = () => { quizIdx++; loadQuestion(); }; }
+};
+
+async function showQuizResult() {
+  const total = quizData[quizSubject].length;
+  document.getElementById('quiz-active').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('result-score').textContent = `${quizScore}/${total}`;
+  const pct = (quizScore / total) * 100;
+  document.getElementById('result-msg').textContent = pct >= 80 ? '🎉 অসাধারণ!' : pct >= 60 ? '👍 ভালো করেছ!' : '💪 আবার চেষ্টা করো!';
+
+  // Save to Firestore
+  try {
+    await addDoc(collection(db, 'quizResults'), {
+      userId: currentUser.uid,
+      userName: currentUser.displayName,
+      college: currentUserData?.college || '',
+      subject: quizSubject,
+      score: quizScore,
+      total,
+      createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      quizScore: increment(quizScore * 10),
+      quizCount: increment(1)
+    });
+    showToast(`+${quizScore * 10} পয়েন্ট অর্জিত হয়েছে! 🏆`);
+    if (currentUserData) currentUserData.quizScore = (currentUserData.quizScore || 0) + quizScore * 10;
+  } catch(e) { console.log('Score save error:', e); }
+}
+
+window.restartQuiz = () => {
+  document.getElementById('quiz-result').style.display = 'none';
+  document.getElementById('quiz-start').style.display = 'block';
+};
+
+// ══════════════════════════════════════════════
+//  LEADERBOARD — Firestore
+// ══════════════════════════════════════════════
+async function loadLeaderboard() {
+  const containers = ['lb-all', 'lb-econ', 'lb-eng'];
+  const labels = ['সকল', 'অর্থনীতি', 'ইংরেজি'];
+  const medals = ['🥇','🥈','🥉'];
+  const colors = ['#c8861a','#1a5fa8','#2d7a4f','#6a30a8','#c0392b'];
+
+  // All-time from users collection
+  try {
+    const q = query(collection(db, 'users'), orderBy('quizScore', 'desc'), limit(10));
+    const snap = await getDocs(q);
+    let html = '';
+    let i = 0;
+    snap.forEach(d => {
+      const u = d.data();
+      if (!u.quizScore) return;
+      const letter = (u.name || '?').charAt(0);
+      html += `<div class="lb-item ${i===0?'top1':i===1?'top2':i===2?'top3':''}">
+        <div class="lb-rank">${medals[i]||i+1}</div>
+        <div class="lb-avatar" style="background:${colors[i%5]}">${letter}</div>
+        <div class="lb-info"><div class="lb-name">${u.name||'অজানা'}</div><div class="lb-college">${u.college||''}</div></div>
+        <div><div class="lb-score">${u.quizScore||0}</div><div class="lb-badge">${u.quizCount||0} কুইজ</div></div>
+      </div>`;
+      i++;
+    });
+    document.getElementById('lb-all').innerHTML = html || '<p style="color:var(--muted);text-align:center;padding:20px">এখনো কেউ কুইজ দেয়নি।</p>';
+  } catch(e) { console.log(e); }
+}
+
+// ══════════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════════
+async function loadProfile() {
+  if (!currentUser) return;
+  try {
+    const snap = await getDoc(doc(db, 'users', currentUser.uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      document.getElementById('p-score').textContent = d.quizScore || 0;
+      document.getElementById('p-quizzes').textContent = d.quizCount || 0;
+      document.getElementById('p-notes').textContent = d.notesUploaded || 0;
+      document.getElementById('p-college-info').textContent = d.college || '';
+    }
+    // Last quiz results
+    const q = query(collection(db, 'quizResults'), orderBy('createdAt','desc'), limit(5));
+    const rSnap = await getDocs(q);
+    let html = '';
+    const subjectNames = { econ:'অর্থনীতি', eng:'ইংরেজি', math:'গণিত', ict:'ICT' };
+    rSnap.forEach(d => {
+      if (d.data().userId !== currentUser.uid) return;
+      const r = d.data();
+      const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('bn-BD') : '';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-weight:600">${subjectNames[r.subject]||r.subject}</div><div style="font-size:12px;color:var(--muted)">${date}</div></div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--primary)">${r.score}/${r.total}</div>
+      </div>`;
+    });
+    document.getElementById('quiz-history').innerHTML = html || '<p style="color:var(--muted);font-size:14px;padding:16px 0">এখনো কোনো কুইজ দেওয়া হয়নি।</p>';
+  } catch(e) { console.log(e); }
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+const pageTitles = { dashboard:'ড্যাশবোর্ড', notes:'নোট লাইব্রেরি', quiz:'কুইজ', leaderboard:'লিডারবোর্ড', profile:'আমার প্রোফাইল' };
+
+window.navigate = (page, el) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[page]||'';
+  closeSidebar();
+  if (page === 'notes') loadNotes();
+  if (page === 'leaderboard') loadLeaderboard();
+  if (page === 'profile') loadProfile();
+};
+
+window.openSidebar = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+window.showUploadModal = () => { document.getElementById('upload-modal').style.display = 'flex'; };
+window.closeUploadModal = () => { document.getElementById('upload-modal').style.display = 'none'; };
+window.switchToLogin = () => { document.getElementById('reg-form').style.display = 'none'; document.getElementById('login-form').style.display = 'block'; };
+window.switchToRegister = () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('reg-form').style.display = 'block'; };
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+window.showToast = (msg, type='success') => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#c0392b' : '#1a1208';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+};
+</script>
+
+<style>
+:root {
+  --bg:#f5f0e8; --surface:#fff; --card:#faf7f2;
+  --dark:#1a1208; --primary:#c8861a; --primary-light:#f0b84a; --primary-dark:#8a5c0a;
+  --green:#2d7a4f; --red:#c0392b; --blue:#1a5fa8;
+  --text:#2c1f0a; --muted:#7a6a50; --border:#e0d5c0;
+  --shadow:0 4px 24px rgba(26,18,8,0.10); --radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Hind Siliguri',sans-serif;min-height:100vh;}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  display:flex;min-height:100vh;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#1a1208 0%,#3a2808 100%);
+  padding:20px;
+}
+.auth-box{
+  background:var(--surface);border-radius:24px;padding:40px 36px;
+  width:100%;max-width:420px;box-shadow:0 24px 80px rgba(0,0,0,0.4);
+}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo .mark{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--primary);}
+.auth-logo .sub{font-size:12px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.auth-tabs{display:flex;gap:4px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:24px;}
+.auth-tab{flex:1;padding:8px;text-align:center;border-radius:9px;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s;}
+.auth-tab.active{background:var(--primary);color:white;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.form-group input,.form-group select{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:14px;font-family:'Hind Siliguri',sans-serif;
+  background:var(--card);color:var(--text);transition:border .2s;
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);}
+.auth-btn{
+  width:100%;padding:13px;background:var(--primary);color:white;border:none;
+  border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:'Hind Siliguri',sans-serif;transition:background .2s;margin-top:8px;
+}
+.auth-btn:hover{background:var(--primary-dark);}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--muted);}
+.auth-switch span{color:var(--primary);cursor:pointer;font-weight:600;}
+
+/* ── APP SCREEN ── */
+#app-screen{display:none;min-height:100vh;}
+.app{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--dark);color:#f5f0e8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s;}
+.sidebar-logo{padding:24px 24px 18px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sidebar-logo .mark{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--primary-light);}
+.sidebar-logo .sub{font-size:10px;color:rgba(245,240,232,.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+.sidebar-user{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:white;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:600;}
+.user-role{font-size:11px;color:rgba(245,240,232,.45);margin-top:2px;}
+.nav{flex:1;padding:16px 12px;overflow-y:auto;}
+.nav-section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,240,232,.3);padding:8px 12px 4px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .2s,color .2s;color:rgba(245,240,232,.65);font-size:14px;font-weight:500;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#f5f0e8;}
+.nav-item.active{background:var(--primary);color:white;}
+.nav-item .icon{font-size:18px;width:22px;text-align:center;flex-shrink:0;}
+.sidebar-footer{padding:14px 24px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(245,240,232,.3);}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.logout-btn{padding:7px 18px;background:var(--card);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;font-family:'Hind Siliguri',sans-serif;transition:background .2s;}
+.logout-btn:hover{background:var(--border);}
+.hamburger{display:none;align-items:center;justify-content:center;width:38px;height:38px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;}
+.sidebar-overlay.show{display:block;}
+
+.content{padding:28px;}
+.page{display:none;animation:fadeIn .3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION HEADER */
+.section-header{margin-bottom:22px;}
+.section-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;}
+.section-header p{color:var(--muted);font-size:13px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.amber::after{background:var(--primary);}
+.stat-card.green::after{background:var(--green);}
+.stat-card.blue::after{background:var(--blue);}
+.stat-icon{font-size:26px;margin-bottom:10px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1;margin-bottom:4px;}
+.stat-label{font-size:12px;color:var(--muted);}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;}
+.card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+
+/* NOTICE */
+.notice-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.notice-item:last-child{border-bottom:none;}
+.notice-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.notice-text{font-size:13px;line-height:1.5;}
+.notice-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.notice-input-row{display:flex;gap:10px;margin-bottom:14px;}
+.notice-input-row input{flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Hind Siliguri',sans-serif;background:var(--card);}
+.notice-input-row input:focus{outline:none;border-color:var(--primary);}
+
+/* NOTES */
+.notes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:transform .2s,box-shadow .2s,border-color .2s;}
+.note-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary-light);}
+.note-subject{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
+.tag-econ{background:rgba(200,134,26,.12);color:#8a5c0a;}
+.tag-eng{background:rgba(26,95,168,.12);color:#1a5fa8;}
+.tag-sci{background:rgba(45,122,79,.12);color:#2d7a4f;}
+.tag-math{background:rgba(130,60,180,.12);color:#6a30a8;}
+.tag-ict{background:rgba(180,60,60,.12);color:#a83030;}
+.note-title{font-weight:700;font-size:14px;margin-bottom:6px;line-height:1.4;}
+.note-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.note-footer{display:flex;align-items:center;justify-content:space-between;}
+.note-author{font-size:11px;color:var(--muted);}
+.note-stats{font-size:11px;color:var(--muted);}
+.note-download-btn{background:var(--primary);color:white;border:none;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:background .2s;}
+.note-download-btn:hover{background:var(--primary-dark);}
+
+/* FILTER CHIPS */
+.filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.filter-chip,.subject-chip,.qsubject-chip{padding:7px 18px;border-radius:30px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;font-family:'Hind Siliguri',sans-serif;}
+.filter-chip.selected,.subject-chip.selected,.qsubject-chip.selected{border-color:var(--primary);background:rgba(200,134,26,.1);color:var(--primary-dark);}
+.btn-primary{background:var(--primary);color:white;border:none;padding:10px 26px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:background .2s;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border);padding:9px 22px;border-radius:30px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hind Siliguri',sans-serif;}
+
+/* QUIZ */
+.quiz-start-card{text-align:center;padding:40px 24px;}
+.quiz-start-card h3{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:10px;}
+.qsubject-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:24px;}
+.q-progress{margin-bottom:18px;}
+.q-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.q-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .4s;}
+.q-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted);}
+.q-text{font-size:17px;font-weight:600;margin-bottom:20px;line-height:1.5;}
+.q-options{display:grid;gap:8px;}
+.q-option{padding:12px 18px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:14px;background:var(--card);font-family:'Hind Siliguri',sans-serif;text-align:left;transition:all .2s;}
+.q-option:hover{border-color:var(--primary-light);background:rgba(200,134,26,.05);}
+.q-option.correct{border-color:var(--green);background:rgba(45,122,79,.1);color:var(--green);font-weight:600;}
+.q-option.wrong{border-color:var(--red);background:rgba(192,57,43,.1);color:var(--red);}
+.q-explanation{margin-top:14px;padding:12px 16px;background:rgba(200,134,26,.08);border-left:3px solid var(--primary);border-radius:0 10px 10px 0;font-size:13px;line-height:1.6;display:none;}
+.q-next{margin-top:18px;text-align:right;}
+.quiz-result{display:none;text-align:center;padding:36px 20px;}
+.result-score{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;color:var(--primary);line-height:1;}
+.result-msg{font-size:18px;font-weight:700;margin:12px 0 24px;}
+
+/* LEADERBOARD */
+.lb-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:8px;background:var(--card);border:1px solid var(--border);transition:transform .2s;}
+.lb-item:hover{transform:translateX(4px);}
+.lb-item.top1{background:rgba(200,134,26,.12);border-color:var(--primary-light);}
+.lb-item.top2{background:rgba(180,180,180,.1);border-color:#c0c0c0;}
+.lb-item.top3{background:rgba(180,100,30,.08);border-color:#cd7f32;}
+.lb-rank{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;width:28px;text-align:center;flex-shrink:0;}
+.lb-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:white;flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-name{font-weight:600;font-size:14px;}
+.lb-college{font-size:11px;color:var(--muted);margin-top:1px;}
+.lb-score{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--primary);}
+.lb-badge{font-size:11px;color:var(--muted);text-align:right;}
+
+/* PROFILE */
+.profile-hero{background:linear-gradient(135deg,var(--dark),#3a2808);border-radius:var(--radius);padding:28px;color:white;display:flex;gap:20px;align-items:center;margin-bottom:20px;}
+.profile-avatar-lg{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:white;flex-shrink:0;}
+.profile-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.role-badge{display:inline-block;margin-top:6px;background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.3);color:var(--primary-light);padding:3px 12px;border-radius:20px;font-size:11px;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.ps-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.ps-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--primary);}
+.ps-label{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--surface);border-radius:20px;padding:32px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:white;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.3);transform:translateY(80px);opacity:0;transition:all .3s;z-index:9999;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .two-col,.three-col,.notes-grid{grid-template-columns:1fr;}
+  .hamburger{display:flex;}
+}
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .content{padding:16px;}
+  .topbar{padding:0 16px;}
+  .profile-stats{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH SCREEN ══════════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="mark">MH Academy</div>
+      <div class="sub">CollegeConnect BD</div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="reg-form">
+      <div class="auth-tabs">
+        <div class="auth-tab active">নিবন্ধন</div>
+        <div class="auth-tab" onclick="switchToLogin()">লগইন</div>
+      </div>
+      <div class="form-group"><label>পূর্ণ নাম</label><input id="reg-name" type="text" placeholder="আপনার নাম লিখুন"></div>
+      <div class="form-group"><label>ইমেইল</label><input id="reg-email" type="email" placeholder="email@example.com"></div>
+      <div class="form-group"><label>পাসওয়ার্ড</label><input id="reg-pass" type="password" placeholder="কমপক্ষে ৬ অক্ষর"></div>
+      <div class="form-group"><label>আমি একজন</label>
+        <select id="reg-role">
+          <option value="student">শিক্ষার্থী</option>
+          <option value="teacher">শিক্ষক</option>
+        </select>
+      </div>
+      <div class="form-group"><label>কলেজের নাম</label><input id="reg-college" type="text" placeholder="যেমন: জিয়াউদ্দিন কলেজ, কিশোরগঞ্জ"></div>
+      <button class="auth-btn" data-label="নিবন্ধন করুন" onclick="doRegister()">নিবন্ধন করুন</button>
+      <div class="auth-switch">ইতিমধ্যে অ্যাকাউন্ট আছে? <span onclick="switchToLogin()">লগইন করুন</span></div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-form" style="display:none">
+      <div class="auth-tabs">
+        <div class="auth-tab" onclick="switchToRegister()">নিবন্ধন</div>
+        <div class="auth-tab active">লগইন</div>
+      </div>
+      <div class="form-group"><label>ইমেইল</label><input id="login-email" type="email" placeholder="email@example.com"></div>
+      <div class="form-group"><label>পাসওয়ার্ড</label><input id="login-pass" type="password" placeholder="পাসওয়ার্ড"></div>
+      <button class="auth-btn" data-label="লগইন করুন" onclick="doLogin()">লগইন করুন</button>
+      <div class="auth-switch">নতুন ব্যবহারকারী? <span onclick="switchToRegister()">নিবন্ধন করুন</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ APP SCREEN ══════════════ -->
+<div id="app-screen">
+  <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+  <div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="mark">MH Academy</div>
+        <div class="sub">CollegeConnect BD</div>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar" id="sidebar-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-username">লোড হচ্ছে...</div>
+          <div class="user-role" id="sidebar-role"></div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-section-label">প্রধান মেনু</div>
+        <div class="nav-item active" onclick="navigate('dashboard',this)"><span class="icon">🏠</span> ড্যাশবোর্ড</div>
+        <div class="nav-item" onclick="navigate('notes',this)"><span class="icon">📚</span> নোট লাইব্রেরি</div>
+        <div class="nav-item" onclick="navigate('quiz',this)"><span class="icon">✏️</span> কুইজ</div>
+        <div class="nav-item" onclick="navigate('leaderboard',this)"><span class="icon">🏆</span> লিডারবোর্ড</div>
+        <div class="nav-item" onclick="navigate('profile',this)"><span class="icon">👤</span> আমার প্রোফাইল</div>
+      </nav>
+      <div class="sidebar-footer">কিশোরগঞ্জ, ঢাকা বিভাগ</div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="hamburger" onclick="openSidebar()">☰</div>
+          <div class="topbar-title" id="topbar-title">ড্যাশবোর্ড</div>
+        </div>
+        <div class="topbar-right">
+          <button class="logout-btn" onclick="doLogout()">লগআউট ↩</button>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- ─── DASHBOARD ─── -->
+        <div class="page active" id="page-dashboard">
+          <div class="section-header">
+            <h2>স্বাগতম! 👋</h2>
+            <p>MH Academy-র লাইভ ড্যাশবোর্ড</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card amber"><div class="stat-icon">👨‍🎓</div><div class="stat-value" id="stat-users">—</div><div class="stat-label">নিবন্ধিত সদস্য</div></div>
+            <div class="stat-card green"><div class="stat-icon">📝</div><div class="stat-value" id="stat-notes">—</div><div class="stat-label">শেয়ার করা নোট</div></div>
+            <div class="stat-card blue"><div class="stat-icon">✏️</div><div class="stat-value" id="stat-quizzes">—</div><div class="stat-label">কুইজ সম্পন্ন</div></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">📌 নোটিশ বোর্ড</div>
+              <div class="notice-input-row" id="teacher-notice-row" style="display:none">
+                <input id="notice-input" type="text" placeholder="নোটিশ লিখুন...">
+                <button class="btn-primary" style="padding:9px 18px;font-size:13px" onclick="postNotice()">পোস্ট</button>
+              </div>
+              <div id="notices-container"><p style="color:var(--muted);font-size:13px;padding:12px 0">লোড হচ্ছে...</p></div>
+            </div>
+            <div class="card">
+              <div class="card-title">🔥 শীর্ষ শিক্ষার্থী</div>
+              <div id="dash-lb"><p style="color:var(--muted);font-size:13px;padding:12px 0">লোড হচ্ছে...</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">⚡ দ্রুত অ্যাক্সেস</div>
+            <div class="three-col">
+              <div onclick="navigate('notes',document.querySelectorAll('.nav-item')[1])" style="background:rgba(200,134,26,.08);border:1.5px solid rgba(200,134,26,.2);border-radius:12px;padding:16px;cursor:pointer">
+                <div style="font-size:26px;margin-bottom:8px">📚</div><div style="font-weight:700;font-size:14px">নোট ডাউনলোড</div>
+              </div>
+              <div onclick="navigate('quiz',document.querySelectorAll('.nav-item')[2])" style="background:rgba(26,95,168,.08);border:1.5px solid rgba(26,95,168,.2);border-radius:12px;padding:16px;cursor:pointer">
+                <div style="font-size:26px;margin-bottom:8px">✏️</div><div style="font-weight:700;font-size:14px">কুইজ দিন</div>
+              </div>
+              <div onclick="navigate('leaderboard',document.querySelectorAll('.nav-item')[3])" style="background:rgba(45,122,79,.08);border:1.5px solid rgba(45,122,79,.2);border-radius:12px;padding:16px;cursor:pointer">
+                <div style="font-size:26px;margin-bottom:8px">🏆</div><div style="font-weight:700;font-size:14px">লিডারবোর্ড</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── NOTES ─── -->
+        <div class="page" id="page-notes">
+          <div class="section-header">
+            <h2>📚 নোট লাইব্রেরি</h2>
+            <p>সকল বিষয়ের নোট — আপলোড ও ডাউনলোড করুন</p>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+            <div class="filter-chips">
+              <button class="filter-chip selected" onclick="filterNotes('all',this)">সব</button>
+              <button class="filter-chip" onclick="filterNotes('econ',this)">অর্থনীতি</button>
+              <button class="filter-chip" onclick="filterNotes('eng',this)">ইংরেজি</button>
+              <button class="filter-chip" onclick="filterNotes('sci',this)">বিজ্ঞান</button>
+              <button class="filter-chip" onclick="filterNotes('math',this)">গণিত</button>
+              <button class="filter-chip" onclick="filterNotes('ict',this)">ICT</button>
+            </div>
+            <button class="btn-primary" onclick="showUploadModal()" style="font-size:13px;padding:9px 22px">+ নোট আপলোড</button>
+          </div>
+          <div class="notes-grid" id="notes-grid"><p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">লোড হচ্ছে...</p></div>
+        </div>
+
+        <!-- ─── QUIZ ─── -->
+        <div class="page" id="page-quiz">
+          <div class="section-header">
+            <h2>✏️ কুইজ</h2>
+            <p>নিজেকে যাচাই করুন ও পয়েন্ট অর্জন করুন</p>
+          </div>
+          <div class="card">
+            <div id="quiz-start" class="quiz-start-card">
+              <div style="font-size:52px;margin-bottom:16px">🧠</div>
+              <h3>কুইজ শুরু করুন</h3>
+              <p style="color:var(--muted);margin-bottom:22px;font-size:14px">বিষয় বেছে নিন এবং প্রশ্নের উত্তর দিন। সঠিক উত্তরে পয়েন্ট!</p>
+              <div class="qsubject-chips">
+                <button class="qsubject-chip selected" onclick="selectSubject('econ',this)">অর্থনীতি</button>
+                <button class="qsubject-chip" onclick="selectSubject('eng',this)">ইংরেজি</button>
+                <button class="qsubject-chip" onclick="selectSubject('math',this)">গণিত</button>
+                <button class="qsubject-chip" onclick="selectSubject('ict',this)">ICT</button>
+              </div>
+              <button class="btn-primary" onclick="startQuiz()">কুইজ শুরু করুন →</button>
+            </div>
+            <div id="quiz-active" style="display:none">
+              <div class="q-progress">
+                <div class="q-bar"><div class="q-fill" id="q-fill" style="width:10%"></div></div>
+                <div class="q-meta"><span id="q-counter">প্রশ্ন ১ / ৫</span><span>প্রতিটি সঠিক উত্তরে ১০ পয়েন্ট</span></div>
+              </div>
+              <div class="q-text" id="q-text"></div>
+              <div class="q-options" id="q-options"></div>
+              <div class="q-explanation" id="q-explanation"></div>
+              <div class="q-next"><button class="btn-primary" id="q-next-btn" style="display:none">পরবর্তী →</button></div>
+            </div>
+            <div class="quiz-result" id="quiz-result">
+              <div style="font-size:44px;margin-bottom:12px">🎉</div>
+              <div class="result-score" id="result-score">৫/৫</div>
+              <div style="color:var(--muted);font-size:13px;margin:4px 0 12px">সঠিক উত্তর</div>
+              <div class="result-msg" id="result-msg">অসাধারণ!</div>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button class="btn-primary" onclick="restartQuiz()">আবার দিন</button>
+                <button class="btn-secondary" onclick="navigate('leaderboard',document.querySelectorAll('.nav-item')[3])">লিডারবোর্ড দেখুন</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── LEADERBOARD ─── -->
+        <div class="page" id="page-leaderboard">
+          <div class="section-header">
+            <h2>🏆 লিডারবোর্ড</h2>
+            <p>সর্বোচ্চ পয়েন্টধারী শিক্ষার্থীরা — রিয়েলটাইম</p>
+          </div>
+          <div class="card">
+            <div class="card-title">🥇 সার্বিক র‍্যাংকিং (সকল কুইজ)</div>
+            <div id="lb-all"><p style="color:var(--muted);text-align:center;padding:20px">লোড হচ্ছে...</p></div>
+          </div>
+        </div>
+
+        <!-- ─── PROFILE ─── -->
+        <div class="page" id="page-profile">
+          <div class="section-header">
+            <h2>👤 আমার প্রোফাইল</h2>
+            <p>আপনার অ্যাকাউন্ট ও পারফরম্যান্স</p>
+          </div>
+          <div class="profile-hero">
+            <div class="profile-avatar-lg" id="profile-avatar-lg">?</div>
+            <div>
+              <div class="profile-name" id="profile-name-display">—</div>
+              <div style="font-size:13px;color:rgba(245,240,232,.6);margin-top:3px" id="profile-college-display"></div>
+              <div id="p-college-info" style="font-size:12px;color:rgba(245,240,232,.45);margin-top:2px"></div>
+              <div class="role-badge" id="profile-role-display">শিক্ষার্থী</div>
+            </div>
+          </div>
+          <div class="profile-stats">
+            <div class="ps-card"><div class="ps-val" id="p-score">—</div><div class="ps-label">মোট পয়েন্ট</div></div>
+            <div class="ps-card"><div class="ps-val" id="p-quizzes">—</div><div class="ps-label">কুইজ সম্পন্ন</div></div>
+            <div class="ps-card"><div class="ps-val" id="p-notes">—</div><div class="ps-label">নোট আপলোড</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📊 সাম্প্রতিক কুইজ ইতিহাস</div>
+            <div id="quiz-history"><p style="color:var(--muted);font-size:13px">লোড হচ্ছে...</p></div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div>
+</div>
+
+<!-- ─── UPLOAD MODAL ─── -->
+<div class="modal" id="upload-modal">
+  <div class="modal-box">
+    <div class="modal-title">📤 নোট আপলোড করুন</div>
+    <div class="form-group"><label>শিরোনাম *</label><input id="note-title" type="text" placeholder="নোটের শিরোনাম"></div>
+    <div class="form-group"><label>বিষয় *</label>
+      <select id="note-subject">
+        <option value="econ">অর্থনীতি</option>
+        <option value="eng">ইংরেজি</option>
+        <option value="sci">বিজ্ঞান</option>
+        <option value="math">গণিত</option>
+        <option value="ict">ICT</option>
+      </select>
+    </div>
+    <div class="form-group"><label>বিবরণ *</label><input id="note-desc" type="text" placeholder="নোটটি কী বিষয়ে?"></div>
+    <div class="form-group"><label>ডাউনলোড লিঙ্ক (Google Drive / Dropbox)</label><input id="note-url" type="url" placeholder="https://..."></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="uploadNote()">আপলোড করুন</button>
+      <button class="btn-secondary" onclick="closeUploadModal()">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Show teacher notice row if teacher
+setTimeout(() => {
+  const role = document.getElementById('sidebar-role').textContent;
+  if (role.includes('শিক্ষক')) {
+    document.getElementById('teacher-notice-row').style.display = 'flex';
+  }
+}, 1500);
+</script>
+</body>
+</html>
