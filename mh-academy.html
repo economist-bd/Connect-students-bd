@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MH Academy — CollegeConnect BD</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --surface: #ffffff;
+  --card: #faf7f2;
+  --dark: #1a1208;
+  --primary: #c8861a;
+  --primary-light: #f0b84a;
+  --primary-dark: #8a5c0a;
+  --green: #2d7a4f;
+  --red: #c0392b;
+  --blue: #1a5fa8;
+  --text: #2c1f0a;
+  --muted: #7a6a50;
+  --border: #e0d5c0;
+  --shadow: 0 4px 24px rgba(26,18,8,0.10);
+  --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hind Siliguri', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ─── LAYOUT ─── */
+.app { display: flex; min-height: 100vh; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: 240px;
+  background: var(--dark);
+  color: #f5f0e8;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo .logo-mark {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary-light);
+  letter-spacing: -1px;
+}
+.sidebar-logo .logo-sub {
+  font-size: 11px;
+  color: rgba(245,240,232,0.45);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: white; flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 11px; color: rgba(245,240,232,0.45); margin-top: 2px; }
+.nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(245,240,232,0.3); padding: 8px 12px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  color: rgba(245,240,232,0.65);
+  font-size: 14px; font-weight: 500;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #f5f0e8; }
+.nav-item.active { background: var(--primary); color: white; }
+.nav-item .icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: white; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 10px;
+}
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px; color: rgba(245,240,232,0.3);
+}
+
+/* ─── MAIN ─── */
+.main { margin-left: 240px; flex: 1; }
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 16px;
+  font-size: 13px; color: var(--muted);
+  cursor: pointer;
+}
+.notif-btn {
+  position: relative; cursor: pointer;
+  width: 38px; height: 38px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; background: var(--red);
+  border-radius: 50%; border: 2px solid var(--surface);
+}
+
+.content { padding: 32px; }
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+/* ─── SECTION TITLE ─── */
+.section-header { margin-bottom: 24px; }
+.section-header h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.section-header p { color: var(--muted); font-size: 14px; }
+
+/* ─── STAT CARDS ─── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  position: relative; overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.amber::after { background: var(--primary); }
+.stat-card.green::after { background: var(--green); }
+.stat-card.blue::after { background: var(--blue); }
+.stat-card.red::after { background: var(--red); }
+.stat-icon { font-size: 28px; margin-bottom: 12px; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.stat-delta { margin-top: 8px; font-size: 12px; color: var(--green); font-weight: 600; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* ─── TWO COLUMN ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* ─── NOTICE BOARD ─── */
+.notice-item {
+  display: flex; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.notice-item:last-child { border-bottom: none; padding-bottom: 0; }
+.notice-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.notice-text { font-size: 14px; line-height: 1.5; }
+.notice-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ─── NOTES ─── */
+.notes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.note-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+.note-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--primary-light); }
+.note-subject {
+  display: inline-block;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
+}
+.note-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; line-height: 1.4; }
+.note-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.note-footer { display: flex; align-items: center; justify-content: space-between; }
+.note-author { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.note-stats { display: flex; gap: 10px; font-size: 12px; color: var(--muted); }
+.note-download-btn {
+  background: var(--primary);
+  color: white; border: none;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: 'Hind Siliguri', sans-serif;
+  transition: background 0.2s;
+}
+.note-download-btn:hover { background: var(--primary-dark); }
+
+/* ─── QUIZ ─── */
+.quiz-start-card {
+  text-align: center; padding: 48px 32px;
+}
+.quiz-start-card h3 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+.quiz-start-card p { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+.subject-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 28px; }
+.subject-chip {
+  padding: 8px 20px; border-radius: 30px;
+  border: 2px solid var(--border);
+  background: var(--card);
+  cursor: pointer; font-size: 14px; font-weight: 500;
+  transition: all 0.2s; font-family: 'Hind Siliguri', sans-serif;
+}
+.subject-chip.selected { border-color: var(--primary); background: rgba(200,134,26,0.1); color: var(--primary-dark); }
+.btn-primary {
+  background: var(--primary);
+  color: white; border: none;
+  padding: 12px 32px; border-radius: 30px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'Hind Siliguri', sans-serif;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-secondary {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 24px; border-radius: 30px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'Hind Siliguri', sans-serif;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: var(--border); }
+
+.quiz-question-wrap { display: none; }
+.q-progress { margin-bottom: 20px; }
+.q-progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.q-progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.4s ease; }
+.q-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.q-text { font-size: 19px; font-weight: 600; margin-bottom: 24px; line-height: 1.5; }
+.q-options { display: grid; gap: 10px; }
+.q-option {
+  padding: 14px 20px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer; font-size: 15px;
+  transition: all 0.2s; background: var(--card);
+  font-family: 'Hind Siliguri', sans-serif;
+  text-align: left;
+}
+.q-option:hover { border-color: var(--primary-light); background: rgba(200,134,26,0.05); }
+.q-option.correct { border-color: var(--green); background: rgba(45,122,79,0.1); color: var(--green); font-weight: 600; }
+.q-option.wrong { border-color: var(--red); background: rgba(192,57,43,0.1); color: var(--red); }
+.q-explanation {
+  margin-top: 16px; padding: 14px 18px;
+  background: rgba(200,134,26,0.08);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 10px 10px 0;
+  font-size: 14px; line-height: 1.6; display: none;
+}
+.q-next { margin-top: 20px; text-align: right; }
+
+.quiz-result { display: none; text-align: center; padding: 40px 20px; }
+.result-score { font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800; color: var(--primary); line-height: 1; }
+.result-label { font-size: 16px; color: var(--muted); margin-bottom: 20px; }
+.result-msg { font-size: 20px; font-weight: 700; margin-bottom: 28px; }
+
+/* ─── LEADERBOARD ─── */
+.lb-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 12px;
+  margin-bottom: 8px; background: var(--card);
+  border: 1px solid var(--border);
+  transition: transform 0.2s;
+}
+.lb-item:hover { transform: translateX(4px); }
+.lb-item.top1 { background: rgba(200,134,26,0.12); border-color: var(--primary-light); }
+.lb-item.top2 { background: rgba(180,180,180,0.1); border-color: #c0c0c0; }
+.lb-item.top3 { background: rgba(180,100,30,0.08); border-color: #cd7f32; }
+.lb-rank { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; width: 32px; text-align: center; flex-shrink: 0; }
+.lb-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: white; flex-shrink: 0; }
+.lb-info { flex: 1; }
+.lb-name { font-weight: 600; font-size: 15px; }
+.lb-college { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.lb-score { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--primary); }
+.lb-badge { font-size: 12px; color: var(--muted); text-align: right; }
+
+/* ─── MENTOR ─── */
+.mentor-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.mentor-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.mentor-header { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.mentor-name { font-weight: 700; font-size: 16px; }
+.mentor-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.mentor-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.mentor-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); }
+.mentor-stat { display: flex; gap: 16px; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.connect-btn {
+  width: 100%; padding: 10px;
+  background: var(--dark); color: white;
+  border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'Hind Siliguri', sans-serif;
+  transition: background 0.2s;
+}
+.connect-btn:hover { background: var(--primary-dark); }
+
+/* ─── ADMISSION ─── */
+.admission-timeline .at-item {
+  display: flex; gap: 16px;
+  padding-bottom: 24px;
+  position: relative;
+}
+.admission-timeline .at-item:not(:last-child)::after {
+  content: ''; position: absolute;
+  left: 19px; top: 44px; bottom: 0;
+  width: 2px; background: var(--border);
+}
+.at-num {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.at-content { padding-top: 6px; }
+.at-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.at-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.at-date { font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 4px; }
+
+.univ-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px;
+  transition: border-color 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.univ-card:hover { border-color: var(--primary-light); transform: translateY(-2px); }
+.univ-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.univ-cutoff { font-size: 22px; font-weight: 800; font-family: 'Syne', sans-serif; color: var(--primary); }
+.univ-label { font-size: 11px; color: var(--muted); }
+
+/* ─── PROFILE ─── */
+.profile-hero {
+  background: linear-gradient(135deg, var(--dark), #3a2808);
+  border-radius: var(--radius); padding: 32px;
+  color: white; display: flex; gap: 24px; align-items: center;
+  margin-bottom: 24px;
+}
+.profile-avatar-lg {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800;
+  color: white; flex-shrink: 0;
+}
+.profile-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+.profile-role-badge {
+  display: inline-block; margin-top: 6px;
+  background: rgba(245,158,11,0.25); border: 1px solid rgba(245,158,11,0.4);
+  color: var(--primary-light); padding: 3px 14px; border-radius: 20px; font-size: 12px;
+}
+.profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.ps-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; text-align: center;
+}
+.ps-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--primary); }
+.ps-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.achievement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.achievement {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; text-align: center;
+}
+.ach-icon { font-size: 28px; margin-bottom: 8px; }
+.ach-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.ach-desc { font-size: 11px; color: var(--muted); }
+
+/* ─── MOBILE HEADER ─── */
+.mobile-header { display: none; }
+.hamburger { display: none; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .two-col, .three-col, .notes-grid { grid-template-columns: 1fr; }
+  .achievement-grid { grid-template-columns: repeat(2,1fr); }
+  .profile-stats { grid-template-columns: repeat(3,1fr); }
+  .hamburger {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; font-size: 18px;
+  }
+  .sidebar-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99; display: none;
+  }
+  .sidebar-overlay.show { display: block; }
+}
+@media(max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 0 16px; }
+}
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--dark); color: white;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s; z-index: 9999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── TAG COLORS ─── */
+.tag-econ { background: rgba(200,134,26,0.12); color: #8a5c0a; }
+.tag-eng { background: rgba(26,95,168,0.12); color: #1a5fa8; }
+.tag-sci { background: rgba(45,122,79,0.12); color: #2d7a4f; }
+.tag-math { background: rgba(130,60,180,0.12); color: #6a30a8; }
+.tag-ict { background: rgba(180,60,60,0.12); color: #a83030; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">MH Academy</div>
+      <div class="logo-sub">CollegeConnect BD</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar">ম</div>
+      <div>
+        <div class="user-name">মঞ্জুরুল হক স্যার</div>
+        <div class="user-role">শিক্ষক — অর্থনীতি</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section-label">প্রধান মেনু</div>
+      <div class="nav-item active" onclick="navigate('dashboard', this)">
+        <span class="icon">🏠</span> ড্যাশবোর্ড
+      </div>
+      <div class="nav-item" onclick="navigate('notes', this)">
+        <span class="icon">📚</span> নোট লাইব্রেরি
+      </div>
+      <div class="nav-item" onclick="navigate('quiz', this)">
+        <span class="icon">✏️</span> কুইজ ও পরীক্ষা
+        <span class="nav-badge">৩</span>
+      </div>
+      <div class="nav-item" onclick="navigate('leaderboard', this)">
+        <span class="icon">🏆</span> লিডারবোর্ড
+      </div>
+      <div class="nav-section-label" style="margin-top:8px">সহায়তা</div>
+      <div class="nav-item" onclick="navigate('mentor', this)">
+        <span class="icon">👨‍🎓</span> মেন্টর খুঁজুন
+      </div>
+      <div class="nav-item" onclick="navigate('admission', this)">
+        <span class="icon">🎓</span> ভর্তি গাইড
+      </div>
+      <div class="nav-item" onclick="navigate('profile', this)">
+        <span class="icon">👤</span> আমার প্রোফাইল
+      </div>
+    </nav>
+    <div class="sidebar-footer">কিশোরগঞ্জ, ঢাকা বিভাগ<br>জিয়াউদ্দিন স্কুল এন্ড কলেজ</div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="hamburger" onclick="openSidebar()">☰</div>
+        <div class="topbar-title" id="topbar-title">ড্যাশবোর্ড</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">🔍 &nbsp;খুঁজুন...</div>
+        <div class="notif-btn">🔔 <div class="notif-dot"></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="section-header">
+          <h2>স্বাগতম, মঞ্জুরুল স্যার! 👋</h2>
+          <p>আজকের শিক্ষার্থীদের অগ্রগতির সারসংক্ষেপ</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card amber">
+            <div class="stat-icon">👨‍🎓</div>
+            <div class="stat-value">২৪৮</div>
+            <div class="stat-label">মোট শিক্ষার্থী</div>
+            <div class="stat-delta">↑ ১২ জন এই সপ্তাহে</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">৮৬</div>
+            <div class="stat-label">শেয়ার করা নোট</div>
+            <div class="stat-delta">↑ ৫টি নতুন আজ</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">✏️</div>
+            <div class="stat-value">১,২৩৪</div>
+            <div class="stat-label">কুইজ সম্পন্ন</div>
+            <div class="stat-delta">↑ ৬৭টি আজকে</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">৩৮</div>
+            <div class="stat-label">সক্রিয় মেন্টর</div>
+            <div class="stat-delta">↑ ৩ জন নতুন</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Notice Board -->
+          <div class="card">
+            <div class="card-title">📌 নোটিশ বোর্ড</div>
+            <div class="notice-item">
+              <div class="notice-dot" style="background:var(--red)"></div>
+              <div>
+                <div class="notice-text">HSC ২০২৫ — অর্থনীতি মডেল টেস্ট আগামীকাল সকাল ১০টায়</div>
+                <div class="notice-meta">📅 ৪ মার্চ ২০২৬ • শিক্ষক: মঞ্জুরুল স্যার</div>
+              </div>
+            </div>
+            <div class="notice-item">
+              <div class="notice-dot" style="background:var(--primary)"></div>
+              <div>
+                <div class="notice-text">নতুন অধ্যায় — ৬ষ্ঠ অধ্যায়ের নোট আপলোড করা হয়েছে</div>
+                <div class="notice-meta">📅 ৩ মার্চ ২০২৬ • অর্থনীতি বিভাগ</div>
+              </div>
+            </div>
+            <div class="notice-item">
+              <div class="notice-dot" style="background:var(--green)"></div>
+              <div>
+                <div class="notice-text">বিশ্ববিদ্যালয় ভর্তি কোচিং রেজিস্ট্রেশন শুরু হয়েছে</div>
+                <div class="notice-meta">📅 ২ মার্চ ২০২৬ • প্রশাসন</div>
+              </div>
+            </div>
+            <div class="notice-item">
+              <div class="notice-dot" style="background:var(--blue)"></div>
+              <div>
+                <div class="notice-text">মেন্টরশিপ প্রোগ্রামে ২০ জন সিনিয়র যোগ দিয়েছেন</div>
+                <div class="notice-meta">📅 ১ মার্চ ২০২৬ • মেন্টরশিপ টিম</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Learners -->
+          <div class="card">
+            <div class="card-title">🔥 আজকের সেরা শিক্ষার্থী</div>
+            <div id="dash-lb"></div>
+          </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="card">
+          <div class="card-title">⚡ দ্রুত অ্যাক্সেস</div>
+          <div class="three-col" style="gap:12px">
+            <div onclick="navigate('notes', document.querySelector('[onclick*=notes]'))" style="background:rgba(200,134,26,0.08);border:1.5px solid rgba(200,134,26,0.2);border-radius:12px;padding:18px;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+              <div style="font-size:28px;margin-bottom:8px">📚</div>
+              <div style="font-weight:700;font-size:15px">নোট ডাউনলোড</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">৮৬টি নোট উপলব্ধ</div>
+            </div>
+            <div onclick="navigate('quiz', document.querySelector('[onclick*=quiz]'))" style="background:rgba(26,95,168,0.08);border:1.5px solid rgba(26,95,168,0.2);border-radius:12px;padding:18px;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+              <div style="font-size:28px;margin-bottom:8px">✏️</div>
+              <div style="font-weight:700;font-size:15px">কুইজ দিন</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">৩টি নতুন কুইজ</div>
+            </div>
+            <div onclick="navigate('mentor', document.querySelector('[onclick*=mentor]'))" style="background:rgba(45,122,79,0.08);border:1.5px solid rgba(45,122,79,0.2);border-radius:12px;padding:18px;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+              <div style="font-size:28px;margin-bottom:8px">👨‍🎓</div>
+              <div style="font-weight:700;font-size:15px">মেন্টর খুঁজুন</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">৩৮ জন অ্যাক্টিভ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ NOTES ═══ -->
+      <div class="page" id="page-notes">
+        <div class="section-header">
+          <h2>📚 নোট লাইব্রেরি</h2>
+          <p>HSC ও ডিগ্রি লেভেলের সকল বিষয়ের নোট</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          <button class="btn-primary" style="font-size:13px;padding:8px 20px" onclick="showToast('নোট আপলোড ফিচার শীঘ্রই আসছে!')">+ নোট আপলোড</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="subject-chip selected" onclick="filterNotes('all',this)">সব বিষয়</button>
+            <button class="subject-chip" onclick="filterNotes('econ',this)">অর্থনীতি</button>
+            <button class="subject-chip" onclick="filterNotes('eng',this)">ইংরেজি</button>
+            <button class="subject-chip" onclick="filterNotes('sci',this)">বিজ্ঞান</button>
+            <button class="subject-chip" onclick="filterNotes('math',this)">গণিত</button>
+            <button class="subject-chip" onclick="filterNotes('ict',this)">ICT</button>
+          </div>
+        </div>
+        <div class="notes-grid" id="notes-grid"></div>
+      </div>
+
+      <!-- ═══ QUIZ ═══ -->
+      <div class="page" id="page-quiz">
+        <div class="section-header">
+          <h2>✏️ কুইজ ও পরীক্ষা</h2>
+          <p>নিজেকে যাচাই করুন, স্কোর বাড়ান</p>
+        </div>
+        <div class="card">
+          <div class="quiz-start-card" id="quiz-start">
+            <div style="font-size:56px;margin-bottom:16px">🧠</div>
+            <h3>কুইজ শুরু করুন</h3>
+            <p>বিষয় বেছে নিন এবং ১০টি প্রশ্নের কুইজ দিন</p>
+            <div class="subject-chips" id="quiz-subject-chips">
+              <button class="subject-chip selected" onclick="selectSubject('econ',this)">অর্থনীতি</button>
+              <button class="subject-chip" onclick="selectSubject('eng',this)">ইংরেজি</button>
+              <button class="subject-chip" onclick="selectSubject('math',this)">গণিত</button>
+              <button class="subject-chip" onclick="selectSubject('ict',this)">ICT</button>
+            </div>
+            <button class="btn-primary" onclick="startQuiz()">কুইজ শুরু করুন →</button>
+          </div>
+          <div class="quiz-question-wrap" id="quiz-active">
+            <div class="q-progress">
+              <div class="q-progress-bar"><div class="q-progress-fill" id="q-fill" style="width:10%"></div></div>
+              <div class="q-meta">
+                <span id="q-counter">প্রশ্ন ১ / ১০</span>
+                <span id="q-subject-label">অর্থনীতি</span>
+              </div>
+            </div>
+            <div class="q-text" id="q-text"></div>
+            <div class="q-options" id="q-options"></div>
+            <div class="q-explanation" id="q-explanation"></div>
+            <div class="q-next"><button class="btn-primary" id="q-next-btn" onclick="nextQuestion()" style="display:none">পরবর্তী প্রশ্ন →</button></div>
+          </div>
+          <div class="quiz-result" id="quiz-result">
+            <div style="font-size:48px;margin-bottom:16px">🎉</div>
+            <div class="result-score" id="result-score">৭/১০</div>
+            <div class="result-label">সঠিক উত্তর</div>
+            <div class="result-msg" id="result-msg">চমৎকার!</div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+              <button class="btn-primary" onclick="startQuiz()">আবার দিন</button>
+              <button class="btn-secondary" onclick="navigate('leaderboard', document.querySelector('[onclick*=leaderboard]'))">লিডারবোর্ড দেখুন</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ LEADERBOARD ═══ -->
+      <div class="page" id="page-leaderboard">
+        <div class="section-header">
+          <h2>🏆 লিডারবোর্ড</h2>
+          <p>MH Academy-র সেরা শিক্ষার্থীরা</p>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">🥇 সাপ্তাহিক সেরা</div>
+            <div id="lb-weekly"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📅 মাসিক সেরা</div>
+            <div id="lb-monthly"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MENTOR ═══ -->
+      <div class="page" id="page-mentor">
+        <div class="section-header">
+          <h2>👨‍🎓 মেন্টর খুঁজুন</h2>
+          <p>সিনিয়রদের সাথে সংযুক্ত হন, নির্দেশনা নিন</p>
+        </div>
+        <div class="three-col" id="mentor-grid"></div>
+      </div>
+
+      <!-- ═══ ADMISSION ═══ -->
+      <div class="page" id="page-admission">
+        <div class="section-header">
+          <h2>🎓 ভর্তি গাইড</h2>
+          <p>বিশ্ববিদ্যালয় ভর্তির সম্পূর্ণ রোডম্যাপ</p>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">🗺️ ভর্তি পরীক্ষার ধাপসমূহ</div>
+            <div class="admission-timeline">
+              <div class="at-item">
+                <div class="at-num" style="background:rgba(200,134,26,0.15);color:var(--primary)">১</div>
+                <div class="at-content">
+                  <div class="at-title">HSC পরীক্ষার ফলাফল</div>
+                  <div class="at-desc">GPA ও বিষয়ভিত্তিক নম্বর — বিশ্ববিদ্যালয় আবেদনের ভিত্তি</div>
+                  <div class="at-date">জুলাই ২০২৬</div>
+                </div>
+              </div>
+              <div class="at-item">
+                <div class="at-num" style="background:rgba(26,95,168,0.15);color:var(--blue)">২</div>
+                <div class="at-content">
+                  <div class="at-title">ভর্তি আবেদন</div>
+                  <div class="at-desc">GST (গুচ্ছ) ও পৃথক বিশ্ববিদ্যালয়ে আবেদন করুন</div>
+                  <div class="at-date">আগস্ট ২০২৬</div>
+                </div>
+              </div>
+              <div class="at-item">
+                <div class="at-num" style="background:rgba(45,122,79,0.15);color:var(--green)">৩</div>
+                <div class="at-content">
+                  <div class="at-title">ভর্তি পরীক্ষা প্রস্তুতি</div>
+                  <div class="at-desc">MCQ, রচনামূলক এবং বিষয়ভিত্তিক মডেল টেস্ট</div>
+                  <div class="at-date">সেপ্টেম্বর ২০২৬</div>
+                </div>
+              </div>
+              <div class="at-item">
+                <div class="at-num" style="background:rgba(130,60,180,0.15);color:#6a30a8">৪</div>
+                <div class="at-content">
+                  <div class="at-title">ভর্তি পরীক্ষা</div>
+                  <div class="at-desc">ঢাকা, চট্টগ্রাম, রাজশাহী সহ সকল পাবলিক বিশ্ববিদ্যালয়</div>
+                  <div class="at-date">অক্টোবর–নভেম্বর ২০২৬</div>
+                </div>
+              </div>
+              <div class="at-item">
+                <div class="at-num" style="background:rgba(200,134,26,0.15);color:var(--primary)">৫</div>
+                <div class="at-content">
+                  <div class="at-title">ভর্তি নিশ্চিতকরণ</div>
+                  <div class="at-desc">মেধা তালিকা প্রকাশ, সাবজেক্ট বেছে নেওয়া ও ভর্তি সম্পন্ন</div>
+                  <div class="at-date">ডিসেম্বর ২০২৬</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:0">
+              <div class="card-title">🏛️ কাটঅফ গাইড (অর্থনীতি)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="univ-grid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PROFILE ═══ -->
+      <div class="page" id="page-profile">
+        <div class="section-header">
+          <h2>👤 আমার প্রোফাইল</h2>
+          <p>আপনার অ্যাকাউন্ট ও কার্যকলাপ</p>
+        </div>
+        <div class="profile-hero">
+          <div class="profile-avatar-lg">ম</div>
+          <div>
+            <div class="profile-name">মো. মঞ্জুরুল হক</div>
+            <div style="font-size:14px;color:rgba(245,240,232,0.65);margin-top:4px">প্রভাষক — অর্থনীতি বিভাগ</div>
+            <div style="font-size:13px;color:rgba(245,240,232,0.5);margin-top:3px">জিয়াউদ্দিন স্কুল এন্ড কলেজ, কিশোরগঞ্জ</div>
+            <div class="profile-role-badge">শিক্ষক অ্যাকাউন্ট ✓</div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="ps-card"><div class="ps-val">২৪৮</div><div class="ps-label">মোট শিক্ষার্থী</div></div>
+          <div class="ps-card"><div class="ps-val">৮৬</div><div class="ps-label">আপলোড করা নোট</div></div>
+          <div class="ps-card"><div class="ps-val">৪.৯</div><div class="ps-label">রেটিং ⭐</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏅 অর্জনসমূহ</div>
+          <div class="achievement-grid">
+            <div class="achievement">
+              <div class="ach-icon">🥇</div>
+              <div class="ach-name">সেরা শিক্ষক</div>
+              <div class="ach-desc">মার্চ ২০২৬</div>
+            </div>
+            <div class="achievement">
+              <div class="ach-icon">📚</div>
+              <div class="ach-name">নোট মাস্টার</div>
+              <div class="ach-desc">৮৬+ নোট আপলোড</div>
+            </div>
+            <div class="achievement">
+              <div class="ach-icon">🤝</div>
+              <div class="ach-name">মেন্টর</div>
+              <div class="ach-desc">৩৮ জন সংযুক্ত</div>
+            </div>
+            <div class="achievement">
+              <div class="ach-icon">🚀</div>
+              <div class="ach-name">পাইওনিয়ার</div>
+              <div class="ach-desc">প্রতিষ্ঠাতা সদস্য</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───
+const notesData = [
+  { id:1, subject:'econ', subjectLabel:'অর্থনীতি', tagClass:'tag-econ', title:'চাহিদা ও যোগান — সম্পূর্ণ নোট', desc:'HSC অর্থনীতির ১ম অধ্যায়ের বিস্তারিত নোট, চার্ট ও উদাহরণ সহ।', author:'মঞ্জুরুল স্যার', downloads:234, likes:87 },
+  { id:2, subject:'econ', subjectLabel:'অর্থনীতি', tagClass:'tag-econ', title:'জাতীয় আয় ও GDP', desc:'জাতীয় আয় পরিমাপ পদ্ধতি, GNP, GDP এর পার্থক্য ও হিসাব।', author:'মঞ্জুরুল স্যার', downloads:189, likes:64 },
+  { id:3, subject:'eng', subjectLabel:'ইংরেজি', tagClass:'tag-eng', title:'Paragraph Writing Guide', desc:'HSC English 1st Paper — সব ধরনের Paragraph এর উদাহরণ ও কৌশল।', author:'রহিমা আক্তার', downloads:312, likes:102 },
+  { id:4, subject:'sci', subjectLabel:'বিজ্ঞান', tagClass:'tag-sci', title:'রাসায়নিক বিক্রিয়া', desc:'HSC রসায়ন — জৈব ও অজৈব বিক্রিয়ার সম্পূর্ণ সারসংক্ষেপ।', author:'করিম হোসেন', downloads:156, likes:49 },
+  { id:5, subject:'math', subjectLabel:'গণিত', tagClass:'tag-math', title:'ক্যালকুলাস সহজে', desc:'ডিফারেনশিয়াল ক্যালকুলাস — সূত্র, প্রমাণ ও সমাধান।', author:'আনিসুর রহমান', downloads:278, likes:93 },
+  { id:6, subject:'ict', subjectLabel:'ICT', tagClass:'tag-ict', title:'ডেটাবেজ ম্যানেজমেন্ট', desc:'SQL, ER ডায়াগ্রাম ও ডেটাবেজ নরমালাইজেশন সহজ ভাষায়।', author:'সাকিব আলম', downloads:198, likes:71 },
+  { id:7, subject:'econ', subjectLabel:'অর্থনীতি', tagClass:'tag-econ', title:'মুদ্রাস্ফীতি ও মুদ্রানীতি', desc:'কেন্দ্রীয় ব্যাংক, মুদ্রানীতির হাতিয়ার ও বাস্তব উদাহরণ।', author:'মঞ্জুরুল স্যার', downloads:143, likes:58 },
+  { id:8, subject:'eng', subjectLabel:'ইংরেজি', tagClass:'tag-eng', title:'Grammar Master — All Tenses', desc:'১২টি Tense এর সহজ ব্যাখ্যা, উদাহরণ ও অনুশীলনী।', author:'ফারহানা বেগম', downloads:421, likes:138 },
+  { id:9, subject:'math', subjectLabel:'গণিত', tagClass:'tag-math', title:'ত্রিকোণমিতি সূত্র শীট', desc:'সকল ত্রিকোণমিতিক সূত্র এক পাতায় — পরীক্ষার আগের রাতের জন্য।', author:'আনিসুর রহমান', downloads:509, likes:167 },
+];
+
+const quizData = {
+  econ: [
+    { q:'চাহিদা বিধি অনুযায়ী দাম বাড়লে চাহিদার কী হয়?', opts:['বাড়ে','কমে','অপরিবর্তিত থাকে','দ্বিগুণ হয়'], ans:1, exp:'চাহিদা বিধি অনুসারে দাম ও চাহিদার মধ্যে বিপরীত সম্পর্ক বিদ্যমান। দাম বাড়লে চাহিদা কমে।' },
+    { q:'GDP-র পূর্ণরূপ কী?', opts:['General Domestic Product','Gross Domestic Product','Gross Development Plan','General Development Policy'], ans:1, exp:'GDP = Gross Domestic Product — কোনো দেশের ভূখণ্ডে এক বছরে উৎপাদিত সকল পণ্য ও সেবার মোট বাজারমূল্য।' },
+    { q:'মুক্তবাজার অর্থনীতিতে দাম নির্ধারণ হয় কীভাবে?', opts:['সরকার নির্ধারণ করে','চাহিদা ও যোগানের দ্বারা','উৎপাদনকারী নির্ধারণ করে','ভোক্তা নির্ধারণ করে'], ans:1, exp:'মুক্তবাজার অর্থনীতিতে দাম চাহিদা ও যোগানের মিথস্ক্রিয়া — অর্থাৎ বাজার শক্তি দ্বারা নির্ধারিত হয়।' },
+    { q:'স্থিতিস্থাপক চাহিদার ক্ষেত্রে চাহিদার স্থিতিস্থাপকতার মান কেমন?', opts:['১ এর কম','১ এর সমান','১ এর বেশি','শূন্য'], ans:2, exp:'স্থিতিস্থাপক চাহিদায় Ed > 1, অর্থাৎ দামের পরিবর্তনের চেয়ে চাহিদার পরিবর্তন বেশি।' },
+    { q:'বাংলাদেশে কেন্দ্রীয় ব্যাংক কোনটি?', opts:['সোনালী ব্যাংক','অগ্রণী ব্যাংক','বাংলাদেশ ব্যাংক','ব্র্যাক ব্যাংক'], ans:2, exp:'বাংলাদেশ ব্যাংক হলো দেশের কেন্দ্রীয় ব্যাংক যা মুদ্রানীতি পরিচালনা করে।' },
+  ],
+  eng: [
+    { q:'Which sentence is correct?', opts:['He go to school','He goes to school','He going to school','He gone to school'], ans:1, exp:'Present Simple Tense-এ 3rd person singular subject-এর সাথে verb-এ s/es যোগ হয়।' },
+    { q:'The synonym of "happy" is:', opts:['Sad','Joyful','Angry','Tired'], ans:1, exp:'"Joyful" মানে আনন্দিত — happy-র synonym।' },
+    { q:'Passive voice of "He writes a letter" is:', opts:['A letter is written by him','A letter was written by him','A letter has been written by him','A letter will be written by him'], ans:0, exp:'Present Simple Active → Present Simple Passive: Subject + is/am/are + V3 + by + Object.' },
+    { q:'Which is a conjunction?', opts:['Quickly','Beautiful','Because','Run'], ans:2, exp:'"Because" একটি conjunction যা দুটি clause যুক্ত করে।' },
+    { q:'The antonym of "ancient" is:', opts:['Old','Modern','Historic','Antique'], ans:1, exp:'"Modern" মানে আধুনিক — ancient (প্রাচীন)-এর বিপরীত।' },
+  ],
+  math: [
+    { q:'sin²θ + cos²θ = ?', opts:['0','2','1','θ'], ans:2, exp:'এটি একটি মৌলিক ত্রিকোণমিতিক পরিচয় সম্পর্ক। sin²θ + cos²θ সর্বদা = 1।' },
+    { q:'√144 = ?', opts:['11','12','13','14'], ans:1, exp:'12 × 12 = 144, তাই √144 = 12।' },
+    { q:'log₁₀(100) = ?', opts:['1','2','10','100'], ans:1, exp:'10² = 100, তাই log₁₀(100) = 2।' },
+    { q:'একটি ত্রিভুজের তিন কোণের সমষ্টি কত?', opts:['90°','180°','270°','360°'], ans:1, exp:'যেকোনো ত্রিভুজের তিনটি অন্তঃকোণের সমষ্টি সর্বদা 180°।' },
+    { q:'2x + 5 = 15 হলে x = ?', opts:['3','4','5','6'], ans:2, exp:'2x = 15 - 5 = 10, তাই x = 10/2 = 5।' },
+  ],
+  ict: [
+    { q:'HTML-এর পূর্ণরূপ কী?', opts:['Hyper Text Markup Language','High Tech Modern Language','Hyper Transfer Markup Language','Hyper Tech Markup Link'], ans:0, exp:'HTML = HyperText Markup Language — ওয়েব পেজ তৈরির মূল ভাষা।' },
+    { q:'CPU-র পূর্ণরূপ কী?', opts:['Central Processing Unit','Computer Processing Unit','Central Program Unit','Central Processing Universe'], ans:0, exp:'CPU = Central Processing Unit — কম্পিউটারের মস্তিষ্ক।' },
+    { q:'Internet-এর জনক কে?', opts:['Bill Gates','Tim Berners-Lee','Vint Cerf','Steve Jobs'], ans:2, exp:'Vint Cerf কে "Father of the Internet" বলা হয়।' },
+    { q:'Binary তে 10 = দশমিকে কত?', opts:['1','2','3','4'], ans:1, exp:'Binary 10 = 1×2¹ + 0×2⁰ = 2 (দশমিক)।' },
+    { q:'www এর পূর্ণরূপ কী?', opts:['World Wide Web','World Wide Wire','Wide Web World','Web Wide World'], ans:0, exp:'www = World Wide Web — ইন্টারনেটে তথ্য শেয়ারের সিস্টেম।' },
+  ],
+};
+
+const leaderboardData = [
+  { name:'রাফি আহমেদ', college:'জিয়াউদ্দিন কলেজ', score:980, quizzes:48, avatar:'রা', color:'#c8861a' },
+  { name:'তানভীর হোসেন', college:'কিশোরগঞ্জ সরকারি কলেজ', score:945, quizzes:45, avatar:'তা', color:'#1a5fa8' },
+  { name:'সাদিয়া ইসলাম', college:'গুরুদয়াল কলেজ', score:912, quizzes:42, avatar:'সা', color:'#2d7a4f' },
+  { name:'নাফিস করিম', college:'জিয়াউদ্দিন কলেজ', score:876, quizzes:39, avatar:'না', color:'#6a30a8' },
+  { name:'মিথিলা রহমান', college:'ভৈরব কলেজ', score:841, quizzes:37, avatar:'মি', color:'#c0392b' },
+  { name:'আরমান হক', college:'কিশোরগঞ্জ সরকারি কলেজ', score:820, quizzes:35, avatar:'আ', color:'#c8861a' },
+];
+
+const mentorData = [
+  { name:'ড. আরিফ হাসান', dept:'অর্থনীতি বিভাগ, ঢাকা বিশ্ববিদ্যালয়', subjects:['অর্থনীতি','ব্যবসায়'], rating:'⭐ 4.9', sessions:142, avatar:'আ', color:'#c8861a' },
+  { name:'ফাতেমা খান', dept:'ইংরেজি, জাহাঙ্গীরনগর বিশ্ববিদ্যালয়', subjects:['ইংরেজি','সাহিত্য'], rating:'⭐ 4.8', sessions:98, avatar:'ফা', color:'#2d7a4f' },
+  { name:'রাহুল চক্রবর্তী', dept:'কম্পিউটার সায়েন্স, BUET', subjects:['ICT','প্রোগ্রামিং'], rating:'⭐ 5.0', sessions:87, avatar:'রা', color:'#1a5fa8' },
+  { name:'নাজমুন নাহার', dept:'গণিত বিভাগ, রাজশাহী বিশ্ববিদ্যালয়', subjects:['গণিত','পদার্থ'], rating:'⭐ 4.7', sessions:115, avatar:'না', color:'#6a30a8' },
+  { name:'সাইফুল ইসলাম', dept:'রসায়ন, চট্টগ্রাম বিশ্ববিদ্যালয়', subjects:['রসায়ন','জীববিজ্ঞান'], rating:'⭐ 4.8', sessions:76, avatar:'সা', color:'#c0392b' },
+  { name:'সুমাইয়া বেগম', dept:'পরিসংখ্যান, ঢাকা বিশ্ববিদ্যালয়', subjects:['পরিসংখ্যান','অর্থনীতি'], rating:'⭐ 4.9', sessions:63, avatar:'সু', color:'#c8861a' },
+];
+
+const univData = [
+  { name:'ঢাকা বি.', cutoff:'৭৫+', color:'#c8861a' },
+  { name:'রাজশাহী বি.', cutoff:'৭০+', color:'#1a5fa8' },
+  { name:'চট্টগ্রাম বি.', cutoff:'৬৮+', color:'#2d7a4f' },
+  { name:'জাহাঙ্গীরনগর', cutoff:'৭২+', color:'#6a30a8' },
+  { name:'জগন্নাথ বি.', cutoff:'৬৫+', color:'#c0392b' },
+  { name:'GST গুচ্ছ', cutoff:'৬০+', color:'#c8861a' },
+];
+
+// ─── RENDER ───
+function renderNotes(filter='all') {
+  const grid = document.getElementById('notes-grid');
+  const filtered = filter === 'all' ? notesData : notesData.filter(n => n.subject === filter);
+  grid.innerHTML = filtered.map(n => `
+    <div class="note-card">
+      <span class="note-subject ${n.tagClass}">${n.subjectLabel}</span>
+      <div class="note-title">${n.title}</div>
+      <div class="note-desc">${n.desc}</div>
+      <div class="note-footer">
+        <div class="note-author"><span>👤</span>${n.author}</div>
+        <button class="note-download-btn" onclick="showToast('${n.title} ডাউনলোড শুরু হচ্ছে...')">⬇ ডাউনলোড</button>
+      </div>
+      <div class="note-stats" style="margin-top:10px">
+        <span>⬇ ${n.downloads}</span>
+        <span>❤️ ${n.likes}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderLeaderboard(containerId, data) {
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById(containerId).innerHTML = data.map((s,i) => `
+    <div class="lb-item ${i===0?'top1':i===1?'top2':i===2?'top3':''}">
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="lb-avatar" style="background:${s.color}">${s.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-college">${s.college}</div>
+      </div>
+      <div>
+        <div class="lb-score">${s.score}</div>
+        <div class="lb-badge">${s.quizzes} কুইজ</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMentors() {
+  document.getElementById('mentor-grid').innerHTML = mentorData.map(m => `
+    <div class="mentor-card">
+      <div class="mentor-header">
+        <div class="avatar" style="background:${m.color};width:48px;height:48px;font-size:18px">${m.avatar}</div>
+        <div>
+          <div class="mentor-name">${m.name}</div>
+          <div class="mentor-meta">${m.dept}</div>
+        </div>
+      </div>
+      <div class="mentor-tags">${m.subjects.map(s=>`<span class="mentor-tag">${s}</span>`).join('')}</div>
+      <div class="mentor-stat">
+        <span>${m.rating}</span>
+        <span>📚 ${m.sessions} সেশন</span>
+      </div>
+      <button class="connect-btn" onclick="showToast('${m.name}-এর সাথে সংযোগ পাঠানো হয়েছে!')">সংযোগ করুন →</button>
+    </div>
+  `).join('');
+}
+
+function renderUniversities() {
+  document.getElementById('univ-grid').innerHTML = univData.map(u => `
+    <div class="univ-card" onclick="showToast('${u.name} ভর্তি তথ্য শীঘ্রই যোগ হবে!')">
+      <div class="univ-name">${u.name}</div>
+      <div class="univ-cutoff" style="color:${u.color}">${u.cutoff}</div>
+      <div class="univ-label">কাটঅফ নম্বর</div>
+    </div>
+  `).join('');
+}
+
+function renderDashLB() {
+  const top3 = leaderboardData.slice(0,3);
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('dash-lb').innerHTML = top3.map((s,i) => `
+    <div class="lb-item ${i===0?'top1':i===1?'top2':'top3'}">
+      <div class="lb-rank">${medals[i]}</div>
+      <div class="lb-avatar" style="background:${s.color}">${s.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-college" style="font-size:11px">${s.college}</div>
+      </div>
+      <div class="lb-score">${s.score}</div>
+    </div>
+  `).join('');
+}
+
+// ─── QUIZ LOGIC ───
+let currentSubject = 'econ';
+let currentQIdx = 0;
+let score = 0;
+let answered = false;
+
+function selectSubject(sub, el) {
+  currentSubject = sub;
+  document.querySelectorAll('#quiz-subject-chips .subject-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('q-subject-label').textContent = el.textContent;
+}
+
+function startQuiz() {
+  currentQIdx = 0; score = 0; answered = false;
+  document.getElementById('quiz-start').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'none';
+  document.getElementById('quiz-active').style.display = 'block';
+  document.getElementById('q-next-btn').style.display = 'none';
+  document.getElementById('q-explanation').style.display = 'none';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const questions = quizData[currentSubject];
+  const q = questions[currentQIdx % questions.length];
+  const total = questions.length;
+  document.getElementById('q-fill').style.width = `${((currentQIdx+1)/total)*100}%`;
+  document.getElementById('q-counter').textContent = `প্রশ্ন ${currentQIdx+1} / ${total}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-explanation').style.display = 'none';
+  document.getElementById('q-next-btn').style.display = 'none';
+  answered = false;
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = q.opts.map((opt, i) => `
+    <button class="q-option" onclick="answer(${i})">${String.fromCharCode(2453+i). replace(/[^\u0980-\u09FF]/g,'') || ['ক','খ','গ','ঘ'][i]}. ${opt}</button>
+  `).join('');
+}
+
+function answer(idx) {
+  if (answered) return;
+  answered = true;
+  const questions = quizData[currentSubject];
+  const q = questions[currentQIdx % questions.length];
+  const opts = document.querySelectorAll('.q-option');
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === q.ans) o.classList.add('correct');
+    else if (i === idx && i !== q.ans) o.classList.add('wrong');
+  });
+  if (idx === q.ans) score++;
+  const expEl = document.getElementById('q-explanation');
+  expEl.textContent = '💡 ' + q.exp;
+  expEl.style.display = 'block';
+  const nextBtn = document.getElementById('q-next-btn');
+  const total = questions.length;
+  if (currentQIdx + 1 >= total) {
+    nextBtn.textContent = 'ফলাফল দেখুন 🎉';
+    nextBtn.onclick = showResult;
+  } else {
+    nextBtn.textContent = 'পরবর্তী প্রশ্ন →';
+    nextBtn.onclick = nextQuestion;
+  }
+  nextBtn.style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  currentQIdx++;
+  document.getElementById('q-explanation').style.display = 'none';
+  loadQuestion();
+}
+
+function showResult() {
+  const total = quizData[currentSubject].length;
+  document.getElementById('quiz-active').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('result-score').textContent = `${score}/${total}`;
+  const pct = (score/total)*100;
+  let msg = pct >= 80 ? '🎉 অসাধারণ! তুমি দারুণ!' : pct >= 60 ? '👍 ভালো করেছ! আরেকটু চেষ্টা করো।' : '💪 হতাশ হয়ো না, আবার চেষ্টা করো!';
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('quiz-start').style.display = 'none';
+}
+
+// ─── NAVIGATION ───
+const pageTitles = { dashboard:'ড্যাশবোর্ড', notes:'নোট লাইব্রেরি', quiz:'কুইজ ও পরীক্ষা', leaderboard:'লিডারবোর্ড', mentor:'মেন্টর খুঁজুন', admission:'ভর্তি গাইড', profile:'আমার প্রোফাইল' };
+
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[page] || '';
+  closeSidebar();
+}
+
+function filterNotes(filter, el) {
+  document.querySelectorAll('.subject-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  renderNotes(filter);
+}
+
+// ─── SIDEBAR ───
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ─── TOAST ───
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── INIT ───
+renderNotes();
+renderLeaderboard('lb-weekly', leaderboardData);
+renderLeaderboard('lb-monthly', [...leaderboardData].sort((a,b)=>b.score-a.score));
+renderMentors();
+renderUniversities();
+renderDashLB();
+</script>
+</body>
+</html>
